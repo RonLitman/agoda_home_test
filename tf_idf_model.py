@@ -9,6 +9,7 @@ import sparse_dot_topn.sparse_dot_topn as ct
 import time
 from scipy import spatial
 from sklearn.metrics.pairwise import linear_kernel
+from sklearn.neighbors import KNeighborsClassifier
 
 from utils import *
 
@@ -20,23 +21,26 @@ def ngrams(string, n=3):
 
 
 def match_name(names, tf_idf_matrix, name, country, list_names, list_key, list_country, min_score=0.0):
-    # -1 score incase we don't get any matches
     max_score = -1
     key = -1
-    # Returning empty name for no match as well
     max_name = ""
-    # Iternating over all names in the other
-    for name2, key2, country2 in zip(list_names, list_key, list_country):
 
-        score = linear_kernel(tf_idf_matrix[names.index[names == name]], tf_idf_matrix[names.index[names == name2]]).flatten()[0] * 100
-        # Checking if we are above our threshold and have a better score
-        if (score > min_score) & (score > max_score) & (country == country2):
-            max_name = name2
-            key = key2
-            max_score = score
-            if max_score == 100:
+    cosine_similarities = linear_kernel(tf_idf_matrix[names.index[names == name]], tf_idf_matrix).flatten() * 100
+    related_docs_indices = [i for i in cosine_similarities.argsort()[::-1]]
+
+    for index in related_docs_indices:
+        score = cosine_similarities[index]
+        name2 = names[index]
+        if name2 in list_names.unique():
+            key2 = list_key[list_names == name2].values[0]
+            country2 = list_country[list_names == name2].values[0]
+            if (score > min_score) & (country == country2):
+                max_name = name2
+                key = key2
+                max_score = score
                 break
-    return (max_name, max_score, key)
+
+    return max_name, max_score, key
 
 
 dict_df = load_data()
@@ -55,10 +59,8 @@ names = names.drop_duplicates().reset_index(drop=True)
 vectorizer = TfidfVectorizer(min_df=1, analyzer=ngrams)
 tf_idf_matrix = vectorizer.fit_transform(names)
 
-# List for dicts for easy dataframe creation
 dict_list = []
 
-# iterating over our players without salaries found above
 list_names = dict_df['label_sample']['p2.hotel_name']
 list_key = dict_df['label_sample']['p2.key']
 list_country = dict_df['label_sample']['p2.country_code']
@@ -66,10 +68,8 @@ list_country = dict_df['label_sample']['p2.country_code']
 start_time = time.time()
 for name, key, country in zip(dict_df['label_sample']['p1.hotel_name'], dict_df['label_sample']['p1.key'], dict_df['label_sample']['p1.country_code']):
 
-    # Use our method to find best match, we can set a threshold here
-    match = match_name(names, tf_idf_matrix, name, country, list_names, list_key, list_country, 0.8)
+    match = match_name(names, tf_idf_matrix, name, country, list_names, list_key, list_country, 0.0)
 
-    # New dict for storing data
     dict_ = {}
     dict_.update({"p1.key": key})
     dict_.update({"p2.key": match[2]})
