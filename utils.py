@@ -72,4 +72,20 @@ def plot_roc(pred,labels):
     plt.xlabel('Acc')
     plt.ylabel('Coverage')
     plt.title('Acc Vs Coverage given all thresholds')
+    plt.savefig('roc.png', format="png")
+    plt.show()
+
+
+def plot_n_preds_per_thres(pred):
+    n_pred = []
+    for i in range(100):
+        n_pred.append(len(pred[pred.score > i]))
+
+    fig = plt.figure()
+    ax = plt.axes()
+    ax.plot([i for i in range(100)], n_pred)
+    plt.xlabel('Threshold')
+    plt.ylabel('# Pairs predicted')
+    plt.title('Threshold Vs # of pairs predicted')
+    plt.savefig('roc_pairs_pred.png', format="png")
     plt.show()

@@ -45,12 +45,13 @@ def match_name(names, tf_idf_matrix, name, country, list_names, list_key, list_c
 
 dict_df = load_data()
 
-dict_df['label_sample'] = dict_df['label_sample'].fillna(' ')
-dict_df['label_sample']['p1.hotel_name'] = dict_df['label_sample']['p1.hotel_name'] + '   ' + dict_df['label_sample']['p1.city_name']
-dict_df['label_sample']['p2.hotel_name'] = dict_df['label_sample']['p2.hotel_name'] + '   ' + dict_df['label_sample']['p2.city_name']
+dict_df['p1'] = dict_df['p1'].fillna(' ')
+dict_df['p2'] = dict_df['p2'].fillna(' ')
+dict_df['p1']['p1.hotel_name'] = dict_df['p1']['p1.hotel_name'] + '   ' + dict_df['p1']['p1.city_name'] + '   ' + dict_df['p1']['p1.hotel_address']
+dict_df['p2']['p2.hotel_name'] = dict_df['p2']['p2.hotel_name'] + '   ' + dict_df['p2']['p2.city_name'] + '   ' + dict_df['p2']['p2.hotel_address']
 
-names = dict_df['label_sample']['p1.hotel_name'].reset_index(drop=True)
-names = names.append(dict_df['label_sample']['p2.hotel_name']).reset_index(drop=True)
+names = dict_df['p1']['p1.hotel_name'].reset_index(drop=True)
+names = names.append(dict_df['p2']['p2.hotel_name']).reset_index(drop=True)
 
 duplicated_name = names[names.duplicated()].copy()
 duplicated_name = pd.DataFrame(duplicated_name, columns=['left_side']).reset_index(drop=True).drop_duplicates()
@@ -65,12 +66,12 @@ tf_idf_matrix = vectorizer.fit_transform(names)
 
 dict_list = []
 
-list_names = dict_df['label_sample']['p2.hotel_name']
-list_key = dict_df['label_sample']['p2.key']
-list_country = dict_df['label_sample']['p2.country_code']
+list_names = dict_df['p2']['p2.hotel_name']
+list_key = dict_df['p2']['p2.key']
+list_country = dict_df['p2']['p2.country_code']
 
 
-for name, key, country in zip(dict_df['label_sample']['p1.hotel_name'], dict_df['label_sample']['p1.key'], dict_df['label_sample']['p1.country_code']):
+for name, key, country in zip(dict_df['p1']['p1.hotel_name'], dict_df['p1']['p1.key'], dict_df['p1']['p1.country_code']):
 
     match = match_name(names, tf_idf_matrix, name, country, list_names, list_key, list_country, 0.0)
 
@@ -84,8 +85,9 @@ for name, key, country in zip(dict_df['label_sample']['p1.hotel_name'], dict_df[
 
 print("--- %s seconds to find the closes string ---" % (time.time() - start_time))
 merge_table = pd.DataFrame(dict_list)
-print_results_stats(merge_table, dict_df['label_sample'])
-# merge_table.to_csv('test.csv')
+# print_results_stats(merge_table, dict_df['label_sample'])
+plot_n_preds_per_thres(merge_table)
+merge_table.to_csv('test_sub.csv')
 
 
 
