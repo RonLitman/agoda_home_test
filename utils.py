@@ -1,5 +1,6 @@
 import pandas as pd
-from matplotlib import pyplot as plt
+import matplotlib.pyplot as plt
+plt.style.use('seaborn-whitegrid')
 
 
 def load_data():
@@ -46,3 +47,29 @@ def print_results_stats(pred, labels):
         total_labeled = total_labeled + 1
     print('Total correct {} from {} labeled ({}%)'.format(correct, total_labeled, correct / float(total_labeled)))
     print('Coverage: {}/{} ({}%)'.format(correct, len(labels), correct / float(len(labels))))
+    plot_roc(pred, labels)
+
+
+def plot_roc(pred,labels):
+    all_acc = []
+    all_coverage = []
+    for i in range(100):
+        temp = pred[pred.score > i]
+        correct = 0
+        total_labeled = 0
+        for pair1, pair2 in zip(temp['p1.key'], temp['p2.key']):
+            if (pred[pred['p1.key'] == pair1]['score'] == -1).all():
+                continue
+            if (labels[labels['p1.key'] == pair1]['p2.key'] == pair2).all():
+                correct = correct + 1
+            total_labeled = total_labeled + 1
+        all_acc.append(correct / float(total_labeled))
+        all_coverage.append(correct / float(len(labels)))
+
+    fig = plt.figure()
+    ax = plt.axes()
+    ax.plot(all_acc, all_coverage)
+    plt.xlabel('Acc')
+    plt.ylabel('Coverage')
+    plt.title('Acc Vs Coverage given all thresholds')
+    plt.show()
