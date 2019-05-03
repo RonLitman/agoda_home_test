@@ -51,6 +51,11 @@ def print_results_stats(pred, labels):
 
 
 def plot_roc(pred,labels):
+    '''
+    plot a kind of "ROC" curve for all the possible thresholds
+    :param pred: prediction ; DataFrame
+    :param labels: labels ; DataFrame
+    '''
     all_acc = []
     all_coverage = []
     for i in range(100):
@@ -77,6 +82,10 @@ def plot_roc(pred,labels):
 
 
 def plot_n_preds_per_thres(pred):
+    '''
+    plot the number of pair predicted for all the thresholds
+    :param pred: prediction ; DataFrame
+    '''
     n_pred = []
     for i in range(100):
         n_pred.append(len(pred[pred.score > i]))
